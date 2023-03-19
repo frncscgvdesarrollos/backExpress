@@ -2,7 +2,7 @@
   "name": "back",
   "type": "module",
   "version": "1.0.0",
-  "description": "",
+  "description": "api rest de relevant",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
