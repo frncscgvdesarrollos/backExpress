@@ -1,5 +1,6 @@
 import { User } from '../models/User.js'
 import jwt from 'jsonwebtoken'
+import { generateToken } from '../utils/generateToken.js';
 
 
 export const register = async (req,res)=>{
@@ -29,11 +30,23 @@ export const login = async (req,res)=>{
         if(!responsePassword) return res.status(400).json({error:"contraseña incorrecta"});
 
         //si el usuario y la contraseña es correcta generamos el token JWT
-        const token = jwt.sign({uid: user.id}, process.env.JWT_SECRET)
-
-        return res.status(200).json({token})
+        const {token, expiresIn} = generateToken(user.id)
+        res.cookie("token",token,{
+            httpOnly: true,
+            secure: !(process.env.MODO==="developer") 
+        })
+        return res.status(200).json({token , expiresIn})
     } catch (error) {
         //manejamos el error del servidor en el caso que este todo bien pero no se pueda loguear. 
          res.status(500).json({message: "error en servidor"})   
     }
 };
+
+export const infoUser = async (req,res) => {
+    try {
+        const user = await User.findById(req.uid)
+        return res.json({user})
+    } catch (error) {
+        console.log(error)
+    }
+}
