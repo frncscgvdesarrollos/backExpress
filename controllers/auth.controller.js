@@ -1,6 +1,6 @@
 import { User } from '../models/User.js'
 import jwt from 'jsonwebtoken'
-import { generateToken } from '../utils/generateToken.js';
+import { generateRefreshToken, generateToken } from '../utils/tokenManager.js';
 
 
 export const register = async (req,res)=>{
@@ -31,17 +31,14 @@ export const login = async (req,res)=>{
 
         //si el usuario y la contraseña es correcta generamos el token JWT
         const {token, expiresIn} = generateToken(user.id)
-        res.cookie("token",token,{
-            httpOnly: true,
-            secure: !(process.env.MODO==="developer") 
-        })
+        generateRefreshToken( user.id , res);
+
         return res.status(200).json({token , expiresIn})
     } catch (error) {
         //manejamos el error del servidor en el caso que este todo bien pero no se pueda loguear. 
          res.status(500).json({message: "error en servidor"})   
     }
 };
-
 export const infoUser = async (req,res) => {
     try {
         const user = await User.findById(req.uid)
@@ -50,3 +47,16 @@ export const infoUser = async (req,res) => {
         console.log(error)
     }
 }
+export const refreshToken = (req,res) => {
+        try {
+        const {token, expiresIn} = generateToken(req.id)
+        return res.status(200).json({token , expiresIn}) 
+        } catch (error) {
+            return res.status(501).json({error : "error en servidor"})
+        }
+        }
+
+export const logout = (req,res) => {
+    res.clearCookie("refreshToken");
+    res.json({ ok: true });
+};
